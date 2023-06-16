@@ -1,3 +1,5 @@
+let s:SplitTag = {}
+
 " A tag that was created because of a tag name that covers multiple scopes
 " Inherits the fields of the "main" tag it was split from.
 " May be replaced during tag processing if it appears as a normal tag later,
@@ -6,20 +8,13 @@
 function! tagbar#prototypes#splittag#new(name) abort
     let newobj = tagbar#prototypes#normaltag#new(a:name)
 
-    let newobj.isSplitTag = function(s:add_snr('s:isSplitTag'))
+    let newobj.isSplitTag = s:SplitTag.isSplitTag
 
     return newobj
 endfunction
 
-function! s:isSplitTag() abort dict
+function! s:SplitTag.isSplitTag() abort dict
     return 1
-endfunction
-
-function! s:add_snr(funcname) abort
-    if !exists("s:snr")
-        let s:snr = matchstr(expand('<sfile>'), '<SNR>\d\+_\zeget_snr$')
-    endif
-    return s:snr . a:funcname
 endfunction
 
 " Modeline {{{1

@@ -1,3 +1,5 @@
+let s:Fileinfo = {}
+
 function! tagbar#prototypes#fileinfo#new(fname, ftype, typeinfo) abort
     let newobj = {}
 
@@ -42,21 +44,21 @@ function! tagbar#prototypes#fileinfo#new(fname, ftype, typeinfo) abort
     " The current foldlevel of the file
     let newobj.foldlevel = g:tagbar_foldlevel
 
-    let newobj.addTag = function(s:add_snr('s:addTag'))
-    let newobj.getTags = function(s:add_snr('s:getTags'))
-    let newobj.getTagsByName = function(s:add_snr('s:getTagsByName'))
-    let newobj.removeTag = function(s:add_snr('s:removeTag'))
-    let newobj.reset = function(s:add_snr('s:reset'))
-    let newobj.clearOldFolds = function(s:add_snr('s:clearOldFolds'))
-    let newobj.sortTags = function(s:add_snr('s:sortTags'))
-    let newobj.openKindFold = function(s:add_snr('s:openKindFold'))
-    let newobj.closeKindFold = function(s:add_snr('s:closeKindFold'))
+    let newobj.addTag = s:Fileinfo.addTag
+    let newobj.getTags = s:Fileinfo.getTags
+    let newobj.getTagsByName = s:Fileinfo.getTagsByName
+    let newobj.removeTag = s:Fileinfo.removeTag
+    let newobj.reset = s:Fileinfo.reset
+    let newobj.clearOldFolds = s:Fileinfo.clearOldFolds
+    let newobj.sortTags = s:Fileinfo.sortTags
+    let newobj.openKindFold = s:Fileinfo.openKindFold
+    let newobj.closeKindFold = s:Fileinfo.closeKindFold
 
     return newobj
 endfunction
 
 " s:addTag() {{{1
-function! s:addTag(tag) abort dict
+function! s:Fileinfo.addTag(tag) abort dict
     call add(self._taglist, a:tag)
 
     if has_key(self._tagdict, a:tag.name)
@@ -67,17 +69,17 @@ function! s:addTag(tag) abort dict
 endfunction
 
 " s:getTags() {{{1
-function! s:getTags() dict abort
+function! s:Fileinfo.getTags() dict abort
     return self._taglist
 endfunction
 
 " s:getTagsByName() {{{1
-function! s:getTagsByName(tagname) dict abort
+function! s:Fileinfo.getTagsByName(tagname) dict abort
     return get(self._tagdict, a:tagname, [])
 endfunction
 
 " s:removeTag() {{{1
-function! s:removeTag(tag) dict abort
+function! s:Fileinfo.removeTag(tag) dict abort
     let idx = index(self._taglist, a:tag)
     if idx >= 0
         call remove(self._taglist, idx)
@@ -93,7 +95,7 @@ endfunction
 " s:reset() {{{1
 " Reset stuff that gets regenerated while processing a file and save the old
 " tag folds
-function! s:reset() abort dict
+function! s:Fileinfo.reset() abort dict
     let self.mtime = getftime(self.fpath)
     let self._taglist = []
     let self._tagdict = {}
@@ -109,14 +111,14 @@ function! s:reset() abort dict
 endfunction
 
 " s:clearOldFolds() {{{1
-function! s:clearOldFolds() abort dict
+function! s:Fileinfo.clearOldFolds() abort dict
     if exists('self._tagfolds_old')
         unlet self._tagfolds_old
     endif
 endfunction
 
 " s:sortTags() {{{1
-function! s:sortTags(compare_typeinfo) abort dict
+function! s:Fileinfo.sortTags(compare_typeinfo) abort dict
     if get(a:compare_typeinfo, 'sort', g:tagbar_sort)
         call tagbar#sorting#sort(self._taglist, 'kind', a:compare_typeinfo)
     else
@@ -125,22 +127,15 @@ function! s:sortTags(compare_typeinfo) abort dict
 endfunction
 
 " s:openKindFold() {{{1
-function! s:openKindFold(kind) abort dict
+function! s:Fileinfo.openKindFold(kind) abort dict
     let self.kindfolds[a:kind.short] = 0
 endfunction
 
 " s:closeKindFold() {{{1
-function! s:closeKindFold(kind) abort dict
+function! s:Fileinfo.closeKindFold(kind) abort dict
     let self.kindfolds[a:kind.short] = 1
 endfunction
 
-" s:add_snr() {{{1
-function! s:add_snr(funcname) abort
-    if !exists("s:snr")
-        let s:snr = matchstr(expand('<sfile>'), '<SNR>\d\+_\zeget_snr$')
-    endif
-    return s:snr . a:funcname
-endfunction
 
 " Modeline {{{1
 " vim: ts=8 sw=4 sts=4 et foldenable foldmethod=marker foldcolumn=1

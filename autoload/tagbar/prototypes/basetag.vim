@@ -4,73 +4,65 @@ let s:visibility_symbols = {
     \ 'private'   : '-'
 \ }
 
+let s:Basetag = {}
+let s:Basetag.name          = ''
+let s:Basetag.fields        = {}
+let s:Basetag.fields.line   = 0
+let s:Basetag.fields.column = 0
+let s:Basetag.prototype     = ''
+let s:Basetag.path          = ''
+let s:Basetag.fullpath      = ''
+let s:Basetag.depth         = 0
+let s:Basetag.parent        = {}
+let s:Basetag.tline         = -1
+let s:Basetag.fileinfo      = {}
+let s:Basetag.typeinfo      = {}
+let s:Basetag._childlist    = []
+let s:Basetag._childdict    = {}
+
 function! tagbar#prototypes#basetag#new(name) abort
-    let newobj = {}
-
-    let newobj.name          = a:name
-    let newobj.fields        = {}
-    let newobj.fields.line   = 0
-    let newobj.fields.column = 0
-    let newobj.prototype     = ''
-    let newobj.path          = ''
-    let newobj.fullpath      = a:name
-    let newobj.depth         = 0
-    let newobj.parent        = {}
-    let newobj.tline         = -1
-    let newobj.fileinfo      = {}
-    let newobj.typeinfo      = {}
-    let newobj._childlist    = []
-    let newobj._childdict    = {}
-
-    let newobj.isNormalTag = function(s:add_snr('s:isNormalTag'))
-    let newobj.isPseudoTag = function(s:add_snr('s:isPseudoTag'))
-    let newobj.isSplitTag = function(s:add_snr('s:isSplitTag'))
-    let newobj.isKindheader = function(s:add_snr('s:isKindheader'))
-    let newobj.getPrototype = function(s:add_snr('s:getPrototype'))
-    let newobj._getPrefix = function(s:add_snr('s:_getPrefix'))
-    let newobj.initFoldState = function(s:add_snr('s:initFoldState'))
-    let newobj.getClosedParentTline = function(s:add_snr('s:getClosedParentTline'))
-    let newobj.isFoldable = function(s:add_snr('s:isFoldable'))
-    let newobj.isFolded = function(s:add_snr('s:isFolded'))
-    let newobj.openFold = function(s:add_snr('s:openFold'))
-    let newobj.closeFold = function(s:add_snr('s:closeFold'))
-    let newobj.setFolded = function(s:add_snr('s:setFolded'))
-    let newobj.openParents = function(s:add_snr('s:openParents'))
-    let newobj.addChild = function(s:add_snr('s:addChild'))
-    let newobj.getChildren = function(s:add_snr('s:getChildren'))
-    let newobj.getChildrenByName = function(s:add_snr('s:getChildrenByName'))
-    let newobj.removeChild = function(s:add_snr('s:removeChild'))
+    let newobj = s:Basetag.new(a:name)
 
     return newobj
 endfunction
 
+" s:Basetag.new() {{{1
+function! s:Basetag.new(name)
+    let l:newobj = deepcopy(self)
+
+    let l:newobj.name          = a:name
+    let l:newobj.fullpath      = a:name
+
+    return l:newobj
+endfunction
+
 " s:isNormalTag() {{{1
-function! s:isNormalTag() abort dict
+function! s:Basetag.isNormalTag() abort dict
     return 0
 endfunction
 
 " s:isPseudoTag() {{{1
-function! s:isPseudoTag() abort dict
+function! s:Basetag.isPseudoTag() abort dict
     return 0
 endfunction
 
 " s:isSplitTag {{{1
-function! s:isSplitTag() abort dict
+function! s:Basetag.isSplitTag() abort dict
     return 0
 endfunction
 
 " s:isKindheader() {{{1
-function! s:isKindheader() abort dict
+function! s:Basetag.isKindheader() abort dict
     return 0
 endfunction
 
 " s:getPrototype() {{{1
-function! s:getPrototype(short) abort dict
+function! s:Basetag.getPrototype(short) abort dict
     return self.prototype
 endfunction
 
 " s:_getPrefix() {{{1
-function! s:_getPrefix() abort dict
+function! s:Basetag._getPrefix() abort dict
     let fileinfo = self.fileinfo
 
     if !empty(self._childlist)
@@ -97,7 +89,7 @@ function! s:_getPrefix() abort dict
 endfunction
 
 " s:initFoldState() {{{1
-function! s:initFoldState(known_files) abort dict
+function! s:Basetag.initFoldState(known_files) abort dict
     let fileinfo = self.fileinfo
 
     if a:known_files.has(fileinfo.fpath) &&
@@ -116,7 +108,7 @@ function! s:initFoldState(known_files) abort dict
 endfunction
 
 " s:getClosedParentTline() {{{1
-function! s:getClosedParentTline() abort dict
+function! s:Basetag.getClosedParentTline() abort dict
     let tagline  = self.tline
 
     " Find the first closed parent, starting from the top of the hierarchy.
@@ -137,24 +129,24 @@ function! s:getClosedParentTline() abort dict
 endfunction
 
 " s:isFoldable() {{{1
-function! s:isFoldable() abort dict
+function! s:Basetag.isFoldable() abort dict
     return !empty(self._childlist)
 endfunction
 
 " s:isFolded() {{{1
-function! s:isFolded() abort dict
+function! s:Basetag.isFolded() abort dict
     return self.fileinfo.tagfolds[self.fields.kind][self.fullpath]
 endfunction
 
 " s:openFold() {{{1
-function! s:openFold() abort dict
+function! s:Basetag.openFold() abort dict
     if self.isFoldable()
         let self.fileinfo.tagfolds[self.fields.kind][self.fullpath] = 0
     endif
 endfunction
 
 " s:closeFold() {{{1
-function! s:closeFold() abort dict
+function! s:Basetag.closeFold() abort dict
     let newline = line('.')
 
     if !empty(self.parent) && self.parent.isKindheader()
@@ -176,12 +168,12 @@ function! s:closeFold() abort dict
 endfunction
 
 " s:setFolded() {{{1
-function! s:setFolded(folded) abort dict
+function! s:Basetag.setFolded(folded) abort dict
     let self.fileinfo.tagfolds[self.fields.kind][self.fullpath] = a:folded
 endfunction
 
 " s:openParents() {{{1
-function! s:openParents() abort dict
+function! s:Basetag.openParents() abort dict
     let parent = self.parent
 
     while !empty(parent)
@@ -191,7 +183,7 @@ function! s:openParents() abort dict
 endfunction
 
 " s:addChild() {{{1
-function! s:addChild(tag) abort dict
+function! s:Basetag.addChild(tag) abort dict
     call add(self._childlist, a:tag)
 
     if has_key(self._childdict, a:tag.name)
@@ -202,17 +194,17 @@ function! s:addChild(tag) abort dict
 endfunction
 
 " s:getChildren() {{{1
-function! s:getChildren() dict abort
+function! s:Basetag.getChildren() dict abort
     return self._childlist
 endfunction
 
 " s:getChildrenByName() {{{1
-function! s:getChildrenByName(tagname) dict abort
+function! s:Basetag.getChildrenByName(tagname) dict abort
     return get(self._childdict, a:tagname, [])
 endfunction
 
 " s:removeChild() {{{1
-function! s:removeChild(tag) dict abort
+function! s:Basetag.removeChild(tag) dict abort
     let idx = index(self._childlist, a:tag)
     if idx >= 0
         call remove(self._childlist, idx)
@@ -223,14 +215,6 @@ function! s:removeChild(tag) dict abort
     if idx >= 0
         call remove(namelist, idx)
     endif
-endfunction
-
-" s:add_snr() {{{1
-function! s:add_snr(funcname) abort
-    if !exists("s:snr")
-        let s:snr = matchstr(expand('<sfile>'), '<SNR>\d\+_\zeget_snr$')
-    endif
-    return s:snr . a:funcname
 endfunction
 
 " Modeline {{{1
